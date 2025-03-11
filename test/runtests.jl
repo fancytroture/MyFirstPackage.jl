@@ -1,8 +1,7 @@
 using MyFirstPackage
 using Test
 using Graphs, TropicalNumbers, LinearAlgebra
-using Pkg
-Pkg.test(; coverage=true)  # 启用代码覆盖率
+
 @testset "MyFirstPackage Tests" begin
 
     # 验证邻接矩阵生成是否正确
