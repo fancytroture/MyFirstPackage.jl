@@ -13,11 +13,6 @@ struct TropicalResult{T<:Real}
     powered_mat::Matrix{TropicalMinPlus{T}}
 end
 
-"""
-    compute_tropical_matrix!(g=smallgraph(:petersen); power=10)
-
-计算热带矩阵幂并返回包含中间结果的TropicalResult对象
-"""
 function compute_tropical_matrix!(g::SimpleGraph=smallgraph(:petersen); power::Int=10)::TropicalResult{Float64}
     # 生成邻接矩阵
     adj = Matrix(adjacency_matrix(g))
