@@ -1,48 +1,70 @@
 using Test
-using TropicalNumbers, Graphs, LinearAlgebra
-using .MyFirstPackage
+using MyFirstPackage
+using Graphs, TropicalNumbers, LinearAlgebra
 
-@testset "MyFirstPackage 测试" begin
-    # 基础维度测试
-    @testset "基础属性" begin
-        @test size(MyFirstPackage.tmat) == (10, 10)
-        @test eltype(MyFirstPackage.tmat) == TropicalMinPlus{Float64}
+@testset "MyFirstPackage Tests" begin
+
+    # 验证邻接矩阵生成是否正确
+    @testset "Adjacency Matrix Generation" begin
+        adj = MyFirstPackage.adj_mat
+        @test size(adj) == (10, 10)  # Petersen图应有10个节点
+        @test adj == adj'  # 邻接矩阵应对称
+        @test all(sum(adj, dims=1) .== 3)  # 每个节点的度数应为3
+        @test all(iszero, diag(adj))  # 对角线无自环
     end
 
-    # 对角线测试
-    @testset "对角线元素" begin
-        for i in 1:10
-            @test MyFirstPackage.tmat[i,i] == TropicalMinPlus(0.0)
-        end
-    end
-
-    # 元素分布测试
-    @testset "元素值验证" begin
-        ones_cnt = 0
-        twos_cnt = 0
+    # 验证热带邻接矩阵转换
+    @testset "Tropical Adjacency Conversion" begin
+        adj = MyFirstPackage.adj_mat
+        trop_adj = MyFirstPackage.tropical_adj
         
+        # 检查0元素转换为Inf，非零元素转换为1.0
         for i in 1:10, j in 1:10
-            if i == j
-                continue  # 跳过对角线
-            end
-            
-            val = MyFirstPackage.tmat[i,j].n  # 确保 TropicalMinPlus 包含 .n 字段
-            if val ≈ 1.0
-                ones_cnt += 1
-            elseif val ≈ 2.0
-                twos_cnt += 1
+            if adj[i, j] == 0
+                @test trop_adj[i, j] == TropicalMinPlus(Inf)
             else
-                error("异常值 $val 在位置 ($i,$j)")
+                @test trop_adj[i, j] == TropicalMinPlus(1.0)
             end
         end
-
-        @test ones_cnt == 30 || error("邻接边数验证失败: 期望 30，实际 $ones_cnt")
-        @test twos_cnt == 60 || error("非邻接路径验证失败: 期望 60，实际 $twos_cnt")
     end
 
-    # 幂等性测试（确保结果稳定）
-    @testset "幂等性验证" begin
-        tmat_squared = MyFirstPackage.tmat^2  # 确保定义了 ^ 运算符
-        @test tmat_squared == MyFirstPackage.tmat || error("幂次结果不稳定")
+    # 验证带对角线的热带矩阵
+    @testset "Tropical Matrix with Diagonal" begin
+        trop_mat = MyFirstPackage.tropical_mat
+        
+        # 检查对角线是否为0.0
+        @test all(trop_mat[i, i] == TropicalMinPlus(0.0) for i in 1:10)
+        
+        # 检查非对角元素与转换后的邻接矩阵一致
+        @test all(trop_mat[i, j] == MyFirstPackage.tropical_adj[i, j] for i in 1:10, j in 1:10 if i != j)
+    end
+
+    # 验证矩阵幂运算结果
+    @testset "Matrix Power Calculation" begin
+        tmat = MyFirstPackage.tmat
+        g = smallgraph(:petersen)
+        
+        # 自反性：节点到自身距离为0
+        @test all(tmat[i, i] == TropicalMinPlus(0.0) for i in 1:10)
+        
+        # 相邻节点距离为1
+        for e in edges(g)
+            u, v = src(e), dst(e)
+            @test tmat[u, v] == TropicalMinPlus(1.0)
+            @test tmat[v, u] == TropicalMinPlus(1.0)  # 无向图对称性
+        end
+        
+        # 非相邻节点距离为2（Petersen图直径为2）
+        adj = MyFirstPackage.adj_mat
+        non_edges = [(i, j) for i in 1:10, j in 1:10 if i != j && adj[i, j] == 0]
+        @test !isempty(non_edges)  # 确保存在非邻接节点对
+        for (i, j) in non_edges[1:min(5, length(non_edges))]  # 抽样测试5个非邻接对
+            @test tmat[i, j] == TropicalMinPlus(2.0)
+        end
+        
+        # 验证10次幂与2次幂结果相同（幂等性）
+        trop_mat = MyFirstPackage.tropical_mat
+        pow2 = trop_mat^2
+        @test tmat == pow2
     end
 end

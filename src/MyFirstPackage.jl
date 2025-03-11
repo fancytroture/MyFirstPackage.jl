@@ -10,6 +10,6 @@ adj_mat = Matrix(adjacency_matrix(smallgraph(:petersen)))
 tropical_adj = map(x -> iszero(x) ? TropicalMinPlus(Inf) : TropicalMinPlus(1.0), adj_mat)
 tropical_mat = tropical_adj + Diagonal([TropicalMinPlus(0.0) for _ in 1:10])
 
-global tmat = tropical_mat^10  # 关键：确保 `tmat` 作为全局变量存在
+global tmat = tropical_mat^10 
 
-end  # 结束 module
+end  
