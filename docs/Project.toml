@@ -1,3 +1,5 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+LiveServer = "16fef848-5104-11e9-1b77-fb7a48bbb589"
 MyFirstPackage = "ebe20685-ac58-45ff-a81b-7ca0ad59c05f"
+TropicalNumbers = "b3a74e9c-7526-4576-a4eb-79c0d4c32334"
