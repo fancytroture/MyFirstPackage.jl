@@ -60,15 +60,29 @@ using Graphs, TropicalNumbers, LinearAlgebra
 
     # --- 参数化测试 ---
     @testset "Parameterized Tests" begin
-        # 测试不同图结构
+        # 测试完全图
         complete_g = complete_graph(3)
         complete_res = MyFirstPackage.compute_tropical_matrix!(complete_g, power=2)
         
-        @test nv(complete_res.graph) == 3
-        @test all(complete_res.powered_mat .== TropicalMinPlus(1.0))  # 完全图两步可达所有节点
-        
-        # 测试不同幂次
-        power5_res = MyFirstPackage.compute_tropical_matrix!(power=5)
-        @test power5_res.powered_mat == result.powered_mat  # 验证幂等性
+        @testset "Complete Graph Verification" begin
+            # 验证维度
+            @test size(complete_res.powered_mat) == (3, 3)
+            
+            # 验证对角线元素
+            @test all(complete_res.powered_mat[i, i] == TropicalMinPlus(0.0) for i in 1:3)
+            
+            # 验证非对角线元素
+            for i in 1:3, j in 1:3
+                if i != j
+                    @test complete_res.powered_mat[i, j] == TropicalMinPlus(1.0)
+                end
+            end
+        end
+    
+        # 测试幂等性
+        @testset "Power Idempotency" begin
+            power5_res = MyFirstPackage.compute_tropical_matrix!(power=5)
+            @test power5_res.powered_mat == result.powered_mat
+        end
     end
 end
